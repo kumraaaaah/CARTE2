@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>AR Food Carousel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- A-Frame Library (Updated for stability) -->
+    <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <!-- AR.js Library for A-Frame -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -30,11 +30,12 @@
         <p>Point your camera at the Hiro marker.</p>
     </div>
 
-    <!-- The AR Scene using AR.js -->
+    <!-- The AR Scene using AR.js with updated settings for stability -->
     <a-scene
         vr-mode-ui="enabled: false;"
         loading-screen="enabled: false;"
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
         embedded
     >
         
@@ -54,10 +55,10 @@
         <a-light type="ambient" color="#FFF" intensity="0.7"></a-light>
         <a-light type="directional" color="#FFF" intensity="0.5" position="-1 2 1"></a-light>
 
-        <!-- The marker that AR.js will look for (Using Hiro preset for reliability) -->
+        <!-- The marker that AR.js will look for -->
         <a-marker preset="hiro">
-            <!-- The scale of this container is adjusted to prevent the "zoomed-in" effect -->
-            <a-entity id="menu-container" scale="0.5 0.5 0.5" rotation="-90 0 0">
+            <!-- CRITICAL FIX: The scale of this container has been significantly reduced to fix the "zoom" issue -->
+            <a-entity id="menu-container" scale="0.25 0.25 0.25" rotation="-90 0 0">
                 <!-- A simple cylinder to act as a white plate -->
                 <a-cylinder color="#FAFAFA" height="0.02" radius="0.15"></a-cylinder>
 
@@ -137,5 +138,7 @@
     </script>
 </body>
 </html>
+
+
 
 
