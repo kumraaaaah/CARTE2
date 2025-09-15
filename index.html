@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>AR Food Carousel</title>
+    <title>AR Food Carousel - Test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -30,46 +30,21 @@
         <p>Point your camera at the Hiro marker.</p>
     </div>
 
-    <!-- The AR Scene using AR.js with updated settings for stability -->
-    <a-scene
-        vr-mode-ui="enabled: false;"
-        loading-screen="enabled: false;"
-        renderer="logarithmicDepthBuffer: true;"
-        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
-        embedded
-    >
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
         
-        <!-- =========================================================== -->
-        <!-- SECTION 1: ADD YOUR NEW 3D MODEL ASSETS HERE                -->
-        <!-- =========================================================== -->
         <a-assets timeout="60000">
-            <!-- Japanese Food Models -->
-            <a-asset-item id="osechi-model" src="assets/osechi/source/polycam_osechi_adjusted.gltf" crossorigin="anonymous"></a-asset-item>
-            <a-asset-item id="salmon-sushi-model" src="assets/salmon_nigiri_sushi/scene.gltf" crossorigin="anonymous"></a-asset-item>
-            
-            <!-- ADD NEW ASSETS HERE -->
-            <!-- e.g., <a-asset-item id="new-dish-model" src="assets/path/to/model.gltf"></a-asset-item> -->
+            <!-- Using a known-working test model from Google -->
+            <a-asset-item id="test-model" src="https://cdn.glitch.com/6a512f17-1777-4a6c-8517-5712f58e1b4c%2FAstronaut.glb?v=1598980830491" crossorigin="anonymous"></a-asset-item>
         </a-assets>
 
-        <!-- Lighting for the scene -->
         <a-light type="ambient" color="#FFF" intensity="0.7"></a-light>
         <a-light type="directional" color="#FFF" intensity="0.5" position="-1 2 1"></a-light>
 
-        <!-- The marker that AR.js will look for -->
         <a-marker preset="hiro">
-            <!-- CRITICAL FIX: The scale of this container has been significantly reduced to fix the "zoom" issue -->
-            <a-entity id="menu-container" scale="0.25 0.25 0.25" rotation="-90 0 0">
-                <!-- A simple cylinder to act as a white plate -->
-                <a-cylinder color="#FAFAFA" height="0.02" radius="0.15"></a-cylinder>
-
-                <!-- Wrapper for all food models to ensure they have the SAME size -->
-                <a-entity id="food-items-wrapper" position="0 0.01 0" scale="0.1 0.1 0.1">
-                    <!-- Japanese -->
-                    <a-gltf-model id="osechi" class="food-item" src="#osechi-model" visible="false"></a-gltf-model>
-                    <a-gltf-model id="salmon-sushi" class="food-item" src="#salmon-sushi-model" visible="false"></a-gltf-model>
-
-                    <!-- ADD NEW 3D MODELS HERE (without a scale attribute) -->
-                    <!-- e.g., <a-gltf-model id="new-dish" class="food-item" src="#new-dish-model" visible="false"></a-gltf-model> -->
+            <a-entity id="menu-container" scale="0.5 0.5 0.5" rotation="-90 0 0">
+                <a-cylinder color="#FAFAFA" height="0.02" radius="0.4"></a-cylinder>
+                <a-entity id="food-items-wrapper" position="0 0.05 0">
+                    <a-gltf-model id="astronaut" class="food-item" src="#test-model" scale="0.2 0.2 0.2" visible="false"></a-gltf-model>
                 </a-entity>
             </a-entity>
         </a-marker>
@@ -81,6 +56,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const loader = document.getElementById('loader');
             const arPrompt = document.getElementById('ar-prompt');
+            const arPromptText = arPrompt.querySelector('p');
             const assets = document.querySelector('a-assets');
             
             assets.addEventListener('loaded', () => {
@@ -88,14 +64,17 @@
                 arPrompt.style.display = 'flex';
             });
 
-            // ===========================================================
-            // SECTION 2: DEFINE YOUR MENU CATEGORIES HERE                 
-            // ===========================================================
+            document.querySelectorAll('a-asset-item').forEach(asset => {
+                asset.addEventListener('error', (e) => {
+                    const errorId = e.target.id;
+                    loader.innerHTML = `<p style="color: red;">Error: Could not load 3D model: <b>${errorId}</b>.<br><br>Please check the file path in your code and repository.</p>`;
+                    loader.style.display = 'flex';
+                });
+            });
+            
             const menuData = {
-                'japanese': ['osechi', 'salmon-sushi'],
-                // ADD NEW CUISINES HERE
-                // e.g., 'indian': ['new-dish', 'another-dish'],
-                'default': ['osechi', 'salmon-sushi']
+                'japanese': ['astronaut'],
+                'default': ['astronaut']
             };
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -112,27 +91,19 @@
 
             const marker = document.querySelector('a-marker');
             marker.addEventListener('markerFound', () => {
-                arPrompt.style.display = 'none';
+                arPromptText.innerText = 'Marker Found!';
                 updateFoodDisplay();
             });
 
             marker.addEventListener('markerLost', () => {
-                arPrompt.style.display = 'flex';
+                arPromptText.innerText = 'Point your camera at the Hiro marker.';
             });
 
-            // Simplified Swipe Logic for the Carousel
-            let touchStartX = 0;
-            document.body.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-            document.body.addEventListener('touchend', e => {
-                let touchEndX = e.changedTouches[0].clientX;
-                if (Math.abs(touchStartX - touchEndX) < 50) return; // Ignore simple taps
-
-                if (touchEndX < touchStartX) { // Swiped Left
-                    currentFoodIndex = (currentFoodIndex + 1) % activeMenuIds.length;
-                } else { // Swiped Right
-                    currentFoodIndex = (currentFoodIndex - 1 + activeMenuIds.length) % activeMenuIds.length;
-                }
-                updateFoodDisplay();
+            // No swipe needed for a single model, but keeping the structure
+            document.body.addEventListener('click', () => {
+                 if (marker.object3D.visible) {
+                    // You could add interactions here if needed
+                 }
             });
         });
     </script>
