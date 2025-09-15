@@ -30,7 +30,7 @@
         <p>Point your camera at the Hiro marker.</p>
     </div>
 
-    <!-- The AR Scene using AR.js with specific camera settings to prevent zooming -->
+    <!-- The AR Scene using AR.js -->
     <a-scene
         vr-mode-ui="enabled: false;"
         loading-screen="enabled: false;"
@@ -122,12 +122,12 @@
             }
 
             const marker = document.querySelector('a-marker');
-            marker.addEventListener('markerFound', () => {
+            marker.addEventListener('markerfound', () => {
                 arPromptText.innerText = 'Marker Found! Swipe to change.';
                 updateFoodDisplay();
             });
 
-            marker.addEventListener('markerLost', () => {
+            marker.addEventListener('markerlost', () => {
                 arPromptText.innerText = 'Point your camera at the Hiro marker.';
             });
 
@@ -150,4 +150,6 @@
     </script>
 </body>
 </html>
+
+
 
