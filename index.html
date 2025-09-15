@@ -30,38 +30,57 @@
         <p>Point your camera at the Hiro marker.</p>
     </div>
 
-    <!-- The AR Scene using AR.js -->
-    <a-scene embedded vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; colorManagement: true;" arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    <!-- The AR Scene using AR.js with specific camera settings to prevent zooming -->
+    <a-scene
+        vr-mode-ui="enabled: false;"
+        loading-screen="enabled: false;"
+        renderer="logarithmicDepthBuffer: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        embedded
+    >
         
+        <!-- =========================================================== -->
+        <!-- SECTION 1: ADD YOUR NEW 3D MODEL ASSETS HERE                -->
+        <!-- =========================================================== -->
         <a-assets timeout="60000">
-            <!-- IMPORTANT: These paths now point to the gltf files inside the asset subfolders -->
-            <a-asset-item id="osechi-model" src="assets/osechi/scene.gltf" crossorigin="anonymous"></a-asset-item>
-            <a-asset-item id="salmon-sushi-model" src="assets/salmon_sushi/scene.gltf" crossorigin="anonymous"></a-asset-item>
+            <!-- Japanese Food Models -->
+            <a-asset-item id="osechi-model" src="assets/osechi/source/polycam_osechi_adjusted.gltf" crossorigin="anonymous"></a-asset-item>
+            <a-asset-item id="salmon-sushi-model" src="assets/salmon_nigiri_sushi/scene.gltf" crossorigin="anonymous"></a-asset-item>
+            
+            <!-- ADD NEW ASSETS HERE -->
+            <!-- e.g., <a-asset-item id="new-dish-model" src="assets/path/to/model.gltf"></a-asset-item> -->
         </a-assets>
 
         <!-- Lighting for the scene -->
-        <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
-        <a-light type="directional" color="#FFF" intensity="0.8" position="-1 2 1"></a-light>
+        <a-light type="ambient" color="#FFF" intensity="0.7"></a-light>
+        <a-light type="directional" color="#FFF" intensity="0.5" position="-1 2 1"></a-light>
 
-        <!-- Using the standard Hiro marker for maximum reliability -->
+        <!-- The marker that AR.js will look for -->
         <a-marker preset="hiro">
-            <a-entity id="menu-container" scale="0.7 0.7 0.7" rotation="-90 0 0">
+            <!-- The scale of this container is adjusted to prevent the "zoom" issue -->
+            <a-entity id="menu-container" scale="0.25 0.25 0.25" rotation="-90 0 0">
                 <!-- A simple cylinder to act as a white plate -->
-                <a-cylinder color="#FAFAFA" height="0.02" radius="0.8"></a-cylinder>
+                <a-cylinder color="#FAFAFA" height="0.02" radius="0.15"></a-cylinder>
 
-                <!-- Wrapper for food models -->
-                <a-entity id="food-items-wrapper" position="0 0.02 0" scale="0.5 0.5 0.5">
+                <!-- Wrapper for all food models to ensure they have the SAME size -->
+                <a-entity id="food-items-wrapper" position="0 0.01 0" scale="0.1 0.1 0.1">
+                    <!-- Japanese -->
                     <a-gltf-model id="osechi" class="food-item" src="#osechi-model" visible="false"></a-gltf-model>
                     <a-gltf-model id="salmon-sushi" class="food-item" src="#salmon-sushi-model" visible="false"></a-gltf-model>
+
+                    <!-- ADD NEW 3D MODELS HERE (without a scale attribute) -->
+                    <!-- e.g., <a-gltf-model id="new-dish" class="food-item" src="#new-dish-model" visible="false"></a-gltf-model> -->
                 </a-entity>
             </a-entity>
         </a-marker>
 
+        <!-- Camera setup with explicit parameters to prevent zooming issues -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const sceneEl = document.querySelector('a-scene');
             const loader = document.getElementById('loader');
             const arPrompt = document.getElementById('ar-prompt');
             const arPromptText = arPrompt.querySelector('p');
@@ -80,8 +99,13 @@
                 });
             });
 
+            // ===========================================================
+            // SECTION 2: DEFINE YOUR MENU CATEGORIES HERE                 
+            // ===========================================================
             const menuData = {
                 'japanese': ['osechi', 'salmon-sushi'],
+                // ADD NEW CUISINES HERE
+                // e.g., 'indian': ['new-dish', 'another-dish'],
                 'default': ['osechi', 'salmon-sushi']
             };
 
@@ -98,25 +122,26 @@
             }
 
             const marker = document.querySelector('a-marker');
-            marker.addEventListener('markerfound', () => {
+            marker.addEventListener('markerFound', () => {
                 arPromptText.innerText = 'Marker Found! Swipe to change.';
                 updateFoodDisplay();
             });
 
-            marker.addEventListener('markerlost', () => {
+            marker.addEventListener('markerLost', () => {
                 arPromptText.innerText = 'Point your camera at the Hiro marker.';
             });
 
+            // Simplified Swipe Logic for the Carousel
             let touchStartX = 0;
             document.body.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
             document.body.addEventListener('touchend', e => {
-                if (!marker.object3D.visible) return;
+                if (!marker.object3D.visible) return; // Only swipe if marker is visible
                 let touchEndX = e.changedTouches[0].clientX;
-                if (Math.abs(touchStartX - touchEndX) < 50) return;
+                if (Math.abs(touchStartX - touchEndX) < 50) return; // Ignore simple taps
 
-                if (touchEndX < touchStartX) {
+                if (touchEndX < touchStartX) { // Swiped Left
                     currentFoodIndex = (currentFoodIndex + 1) % activeMenuIds.length;
-                } else {
+                } else { // Swiped Right
                     currentFoodIndex = (currentFoodIndex - 1 + activeMenuIds.length) % activeMenuIds.length;
                 }
                 updateFoodDisplay();
@@ -125,15 +150,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
