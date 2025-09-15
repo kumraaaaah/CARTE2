@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <!-- AR.js for A-Frame, specifically the NFT version which is robust for markers -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <!-- AR.js Library for A-Frame -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <style>
         .prompt {
@@ -27,47 +27,36 @@
         <p>Loading 3D Models...</p>
     </div>
     <div id="ar-prompt" class="prompt">
-        <p>Point your camera at the marker.</p>
+        <p>Point your camera at the Hiro marker.</p>
     </div>
 
-    <!-- The AR Scene using the new AR.js settings -->
-    <a-scene
-        vr-mode-ui="enabled: false;"
-        loading-screen="enabled: false;"
-        renderer="logarithmicDepthBuffer: true;"
-        arjs='sourceType: webcam; debugUIEnabled: false;'
-        embedded
-    >
+    <!-- The AR Scene using AR.js -->
+    <a-scene embedded vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; colorManagement: true;" arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
         
-        <!-- =========================================================== -->
-        <!-- SECTION 1: YOUR 3D MODELS -->
-        <!-- =========================================================== -->
         <a-assets timeout="60000">
-            <a-asset-item id="osechi-model" src="assets/osechi/source/polycam_osechi_adjusted.gltf" crossorigin="anonymous"></a-asset-item>
-            <a-asset-item id="salmon-sushi-model" src="assets/salmon_nigiri_sushi/scene.gltf" crossorigin="anonymous"></a-asset-item>
+            <!-- IMPORTANT: These paths now point to the gltf files inside the asset subfolders -->
+            <a-asset-item id="osechi-model" src="assets/osechi/scene.gltf" crossorigin="anonymous"></a-asset-item>
+            <a-asset-item id="salmon-sushi-model" src="assets/salmon_sushi/scene.gltf" crossorigin="anonymous"></a-asset-item>
         </a-assets>
 
         <!-- Lighting for the scene -->
-        <a-light type="ambient" color="#FFF" intensity="1.5"></a-light>
-        <a-light type="directional" color="#FFF" intensity="1" position="-1 2 1"></a-light>
+        <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+        <a-light type="directional" color="#FFF" intensity="0.8" position="-1 2 1"></a-light>
 
-        <!-- Using a custom marker from your uploaded file -->
-        <a-marker type="pattern" url="assets/marker.patt">
-            <!-- Container for the plate and food models. 
-                 The scale is now 1 1 1, as AR.js will handle the sizing relative to the physical marker. -->
-            <a-entity id="menu-container" scale="1 1 1" rotation="-90 0 0">
+        <!-- Using the standard Hiro marker for maximum reliability -->
+        <a-marker preset="hiro">
+            <a-entity id="menu-container" scale="0.7 0.7 0.7" rotation="-90 0 0">
                 <!-- A simple cylinder to act as a white plate -->
-                <a-cylinder color="#FAFAFA" height="0.02" radius="0.4"></a-cylinder>
+                <a-cylinder color="#FAFAFA" height="0.02" radius="0.8"></a-cylinder>
 
-                <!-- Wrapper for food models. Models are scaled relative to the plate. -->
-                <a-entity id="food-items-wrapper" position="0 0.025 0" scale="0.25 0.25 0.25">
+                <!-- Wrapper for food models -->
+                <a-entity id="food-items-wrapper" position="0 0.02 0" scale="0.5 0.5 0.5">
                     <a-gltf-model id="osechi" class="food-item" src="#osechi-model" visible="false"></a-gltf-model>
                     <a-gltf-model id="salmon-sushi" class="food-item" src="#salmon-sushi-model" visible="false"></a-gltf-model>
                 </a-entity>
             </a-entity>
         </a-marker>
 
-        <!-- Standard AR.js camera rig -->
         <a-entity camera></a-entity>
     </a-scene>
 
@@ -86,14 +75,11 @@
             document.querySelectorAll('a-asset-item').forEach(asset => {
                 asset.addEventListener('error', (e) => {
                     const errorId = e.target.id;
-                    loader.innerHTML = `<p style="color: red;">Error loading model: <b>${errorId}</b>. Check path.</p>`;
+                    loader.innerHTML = `<p style="color: red;">Error loading model: <b>${errorId}</b>.<br><br>Check the file path in your code and repository.</p>`;
                     loader.style.display = 'flex';
                 });
             });
 
-            // ===========================================================
-            // SECTION 2: DEFINE YOUR MENU CATEGORIES HERE                 
-            // ===========================================================
             const menuData = {
                 'japanese': ['osechi', 'salmon-sushi'],
                 'default': ['osechi', 'salmon-sushi']
@@ -112,19 +98,19 @@
             }
 
             const marker = document.querySelector('a-marker');
-            marker.addEventListener('markerFound', () => {
+            marker.addEventListener('markerfound', () => {
                 arPromptText.innerText = 'Marker Found! Swipe to change.';
                 updateFoodDisplay();
             });
 
-            marker.addEventListener('markerLost', () => {
-                arPromptText.innerText = 'Point your camera at the marker.';
+            marker.addEventListener('markerlost', () => {
+                arPromptText.innerText = 'Point your camera at the Hiro marker.';
             });
 
-            // Simplified Swipe Logic for the Carousel
             let touchStartX = 0;
             document.body.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
             document.body.addEventListener('touchend', e => {
+                if (!marker.object3D.visible) return;
                 let touchEndX = e.changedTouches[0].clientX;
                 if (Math.abs(touchStartX - touchEndX) < 50) return;
 
@@ -139,6 +125,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
